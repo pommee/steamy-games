@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "steamy-games"
+version = "0.0.1"
+description = "Free games claimed, handsfree."
+authors = [ "pommee" ]
+readme = "README.md"
+packages = [ { include = "application" } ]
+
+[tool.poetry.dependencies]
+python = ">3.11,<3.15"
+selenium = "^4.39.0"
+yaspin = "^3.4.0"
+dotenv = "^0.9.9"
+
+[tool.poetry.scripts]
+pocker = "application.main:cli"
+
+[build-system]
+requires = [ "poetry-core" ]
+build-backend = "poetry.core.masonry.api"

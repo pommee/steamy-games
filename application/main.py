@@ -1,7 +1,11 @@
 import os
 import re
+import sys
+import time
+import random
 from selenium import webdriver
 from constants import (
+    TWITTER_CLOSE_SUGGESTED_GOOGLE_LOGIN,
     TWITTER_ACCEPT_COOKIES_XPATH,
     TWITTER_LOGIN_BTN_XPATH,
     TWITTER_LOGIN_EMAIL_XPATH,
@@ -36,24 +40,22 @@ class Twitter:
             TWITTER_EMAIL = os.getenv("TWITTER_EMAIL")
             TWITTER_PASSWORD = os.getenv("TWITTER_PASSWORD")
 
-            with yaspin(text="Logging in to twitter...", color="yellow"):
-                self.helper.xpath_locator(TWITTER_LOGIN_EMAIL_XPATH)
+            with yaspin(text="Logging in to twitter...", color="yellow") as spinner:
+                time.sleep(random.uniform(1.8, 3.2))
                 self.helper.xpath_fill(TWITTER_LOGIN_EMAIL_XPATH, TWITTER_EMAIL)
-
-                self.helper.xpath_locator(TWITTER_LOGIN_NEXT_BTN_XPATH)
+                spinner.text = "Email filled..."
                 self.helper.xpath_btn_click(TWITTER_LOGIN_NEXT_BTN_XPATH)
-
-                self.helper.xpath_locator(TWITTER_LOGIN_PASSWORD_XPATH)
+                spinner.text = "Clicked next button..."
                 self.helper.xpath_fill(TWITTER_LOGIN_PASSWORD_XPATH, TWITTER_PASSWORD)
-
-                self.helper.xpath_locator(TWITTER_LOGIN_BTN_XPATH)
+                spinner.text = "Password filled..."
                 self.helper.xpath_btn_click(TWITTER_LOGIN_BTN_XPATH)
-
-                self.helper.xpath_locator(TWITTER_ACCEPT_COOKIES_XPATH)
+                spinner.text = "Clicked login button..."
                 self.helper.xpath_btn_click(TWITTER_ACCEPT_COOKIES_XPATH)
+                spinner.text = "Accepted cookies..."
 
                 cookies = self.driver.get_cookies()
                 self.helper.save_twitter_cookies(cookies)
+                spinner.write("> Successfully logged in to Twitter")
 
     def restore_session(self, cookies):
         """Cookies are valid since previous session, reuse"""
@@ -113,16 +115,26 @@ def find_links(text):
 
 def start():
     load_dotenv()
-    driver = webdriver.Firefox()
-    helper = Helper(driver)
 
-    twitter = Twitter(driver, helper)
-    twitter.login()
-    tweets = twitter.get_tweets()
+    TWITTER_EMAIL = os.getenv("TWITTER_EMAIL")
+    TWITTER_PASSWORD = os.getenv("TWITTER_PASSWORD")
 
-    steam = Steam(driver, helper, tweets)
-    steam.login()
-    steam.claim_games()
+    if TWITTER_EMAIL == "" or TWITTER_PASSWORD == "":
+        raise sys.exit("Twitter email address and password needs to be filled in using TWITTER_EMAIL & TWITTER environment variables!")
+
+    try:
+        driver = webdriver.Firefox()
+        helper = Helper(driver)
+
+        twitter = Twitter(driver, helper)
+        twitter.login()
+        tweets = twitter.get_tweets()
+
+        steam = Steam(driver, helper, tweets)
+        steam.login()
+        steam.claim_games()
+    finally:
+        driver.close()
 
 
 if __name__ == "__main__":
